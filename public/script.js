@@ -26,7 +26,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             body: JSON.stringify({ username: usernameInput, password: passwordInput })
         });
         const data = await response.json();
-                if (response.ok) {
+            if (response.ok) {
             // 🟢 Redirect the browser to the protected homepage
             window.location.href = '/home.html';
         } else {

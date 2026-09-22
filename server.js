@@ -7,6 +7,9 @@ const session = require('express-session');
 
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 // Use the cloud server's assigned port, or default to 3000 locally
 const PORT = process.env.PORT || 3000; 
 
@@ -52,7 +55,11 @@ const pool = mysql.createPool({
 
 // --- LOGIN ROUTE ---
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
+
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: "Username and password are required." });
+    }
 
     try {
         // Query the database for the provided username
@@ -82,7 +89,11 @@ app.post('/api/login', async (req, res) => {
 
 // --- NEW USER REGISTRATION ROUTE ---
 app.post('/api/register', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
+
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: "Username and password are required." });
+    }
 
     try {
         // Check if username is already taken in the system
