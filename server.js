@@ -10,6 +10,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+if (process.env.COOKIE_SECURE === 'true') {
+    app.set('trust proxy', 1);
+}
+
 // Use the cloud server's assigned port, or default to 3000 locally
 const PORT = process.env.PORT || 3000; 
 
@@ -20,7 +24,9 @@ app.use(session({
     saveUninitialized: false,
     cookie: { 
         maxAge: 10 * 60 * 1000, // Session automatically expires after 10 minutes
-        secure: process.env.NODE_ENV === 'production' // Uses secure cookies on HTTPS/cloud environments
+        secure: process.env.COOKIE_SECURE === 'true',
+        httpOnly: true,
+        sameSite: 'lax'
     }
 }));
 
@@ -77,7 +83,13 @@ app.post('/api/login', async (req, res) => {
         if (isMatch) {
             // Save user details into the server's session state memory
             req.session.user = { id: user.id, username: user.username };
-            return res.status(200).json({ success: true, message: "Logged in successfully!" });
+            return req.session.save((sessionError) => {
+                if (sessionError) {
+                    console.error("Login Session Error:", sessionError);
+                    return res.status(500).json({ success: false, message: "Could not create login session." });
+                }
+                return res.status(200).json({ success: true, message: "Logged in successfully!" });
+            });
         } else {
             return res.status(401).json({ success: false, message: "Invalid username or password." });
         }
